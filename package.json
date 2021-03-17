@@ -2,14 +2,21 @@
 	"name": "jest-test",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
 	"scripts": {
 		"test": "jest --watch"
 	},
+	"type": "module",
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"jest": "^26.6.3"
+		"@types/jest": "^26.0.20",
+		"@types/pg": "^7.14.11",
+		"jest": "^26.6.3",
+		"ts-jest": "^26.5.3",
+		"ts-node": "^9.1.1"
+	},
+	"dependencies": {
+		"pg": "^8.5.1"
 	}
 }
