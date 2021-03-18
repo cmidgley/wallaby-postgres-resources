@@ -1,23 +1,11 @@
-import { Client } from "pg";
-
 export class Resource {
 	uniqueId: number = Math.round(Math.random() * 10000);
-	pgClient: Client;
 
 	async setup() {
 		console.log(`sample.test.ts:Resource:setup: Setup started for ${this.uniqueId}`);
-		const password = "<PASSWORD HERE>";
 
 		try {
-			console.log(`sample.test.ts:Resource:setup: Setup 1 ${this.uniqueId}`);
-			this.pgClient = new Client({
-				connectionString: `postgresql://postgres:${password}@localhost:5432/testing`,
-			});
-			console.log(`sample.test.ts:Resource:setup: Setup 2 ${this.uniqueId}`);
 			await new Promise<void>((resolve) => setTimeout(resolve, 1000));
-			console.log(`sample.test.ts:Resource:setup: Setup 3 ${this.uniqueId}`);
-			await this.pgClient.connect();
-			console.log(`sample.test.ts:Resource:setup: Setup 4 ${this.uniqueId}`);
 		} catch (err) {
 			console.error(
 				`sample.test.ts:Resource:setup: Unable to connect to database for ${this.uniqueId}: ${err.toString()}`
@@ -30,24 +18,21 @@ export class Resource {
 	async teardown(): Promise<void> {
 		console.log(`sample.test.ts:Resource:teardown: Teardown started for ${this.uniqueId}`);
 		try {
-			await this.pgClient.query('select * from "test-1"."User"');
+			await new Promise<void>((resolve) => setTimeout(resolve, 250));
 			console.log(`sample.test.ts:Resource:teardown: Teardown 5 for ${this.uniqueId}`);
-			await this.pgClient.query('select * from "test-1"."Organization"');
+			await new Promise<void>((resolve) => setTimeout(resolve, 250));
 			console.log(`sample.test.ts:Resource:teardown: Teardown 4 for ${this.uniqueId}`);
-			await this.pgClient.query('select * from "test-1"."Team"');
+			await new Promise<void>((resolve) => setTimeout(resolve, 250));
 			console.log(`sample.test.ts:Resource:teardown: Teardown 3 for ${this.uniqueId}`);
-			await this.pgClient.query('select * from "test-1"."Device"');
+			await new Promise<void>((resolve) => setTimeout(resolve, 250));
 			console.log(`sample.test.ts:Resource:teardown: Teardown 2 for ${this.uniqueId}`);
-			await this.pgClient.query('select * from "test-1"."RateLimiter"');
+			await new Promise<void>((resolve) => setTimeout(resolve, 250));
 			console.log(`sample.test.ts:Resource:teardown: Teardown 1 for ${this.uniqueId}`);
-			// await new Promise<void>((resolve) => setTimeout(resolve, 500));
-			if (this.pgClient) await this.pgClient.end();
 		} catch (err) {
 			console.error(
 				`sample.test.ts:Resource:teardown: Error ending client for ${this.uniqueId}: ${err.toString()}`
 			);
 		}
-		this.pgClient = undefined;
 		console.log(`sample.test.ts:Resource:teardown: Teardown complete for ${this.uniqueId}`);
 	}
 }
