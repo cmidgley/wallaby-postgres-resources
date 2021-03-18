@@ -1,41 +1,74 @@
 import { Client } from "pg";
 
-let _pgClient: Client;
+export class Resource {
+	uniqueId: number = Math.round(Math.random() * 10000);
+	pgClient: Client;
 
-describe("test", () => {
-	beforeEach(async () => {
-		// test assumes you have postgres running locally on port 5432 (default), you have created a database called
-		// "testing" and you set the password in the following variable
-		const password = "<INSERT PASSWORD HERE>";
-		_pgClient = new Client({
-			connectionString: `postgresql://postgres:${password}@localhost:5432/testing`,
-		});
+	async setup() {
+		console.log(`sample.test.ts:Resource:setup: Setup started for ${this.uniqueId}`);
+		const password = "11341134";
 
 		try {
-			await _pgClient.connect();
+			this.pgClient = new Client({
+				connectionString: `postgresql://postgres:${password}@localhost:5432/testing`,
+			});
+			await this.pgClient.connect();
 		} catch (err) {
-			console.error("Unable to connect to database:", err);
+			console.error(
+				`sample.test.ts:Resource:setup: Unable to connect to database for ${this.uniqueId}: ${err.toString()}`
+			);
 			throw err;
 		}
+		console.log(`sample.test.ts:Resource:setup: Setup complete for ${this.uniqueId}`);
+	}
+
+	async teardown(): Promise<void> {
+		console.log(`sample.test.ts:Resource:teardown: Teardown started for ${this.uniqueId}`);
+		try {
+			await new Promise<void>((resolve) => setTimeout(resolve, 500));
+			if (this.pgClient) await this.pgClient.end();
+		} catch (err) {
+			console.error(
+				`sample.test.ts:Resource:teardown: Error ending client for ${this.uniqueId}: ${err.toString()}`
+			);
+		}
+		this.pgClient = undefined;
+		console.log(`sample.test.ts:Resource:teardown: Teardown complete for ${this.uniqueId}`);
+	}
+}
+
+declare global {
+	// eslint-disable-next-line @typescript-eslint/no-namespace
+	namespace NodeJS {
+		interface Global {
+			nodeGlobal: { resources: Resource[] };
+		}
+	}
+}
+
+describe("test", () => {
+	let resource: Resource;
+	beforeEach(async () => {
+		resource = new Resource();
+		console.log(`sample.test.ts:beforeEach: Before started for ${resource.uniqueId}`);
+		if (global.nodeGlobal) global.nodeGlobal.resources.push(resource);
+		await resource.setup();
+		console.log(`sample.test.ts:beforeEach: Before done for ${resource.uniqueId}`);
 	});
 	afterEach(async () => {
-		try {
-			await _pgClient.end();
-		} catch (err) {
-			console.error("Unable to shutdown database:", err);
-		}
+		console.log(`sample.test.ts:afterEach: After started for ${resource.uniqueId}`);
+		await resource.teardown();
+
+		if (global.nodeGlobal)
+			global.nodeGlobal.resources = global.nodeGlobal.resources.filter(
+				(teardownResource) => teardownResource !== resource
+			);
+		console.log(`sample.test.ts:afterEach: After complete for ${resource.uniqueId}`);
+		resource = undefined;
 	});
 
 	it("is a slow test", async () => {
-		// the pg resources (session handle) will be released if this test is allowed to complete, and afterEach runs
-		// If it is interrupted, the session handle will not be released until Wallaby is restarted
-		//
-		// You can see this by looking at Postgres and viewing the active sessions and see they leak each time.
-		//
-		// I use the free dBeaver program (see https://dbeaver.io/) to monitor my postgres server connections
-		// (right-click the database name, select Tools / Open Dashboard and look at the ServerSessions graphic), but you
-		// can also look at the pg_catalog schema, in the pg_stat_activity view to see a list of all connections.
-
-		await new Promise<void>((resolve) => setTimeout(resolve, 1000)); //ffdfffffffdsdfa
+		await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+		expect(3).toBe(3);
 	});
 });
