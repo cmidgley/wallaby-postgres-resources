@@ -3,31 +3,25 @@ module.exports = function (wallaby) {
 	return {
 		autoDetect: true,
 		setup: function (wallaby) {
-			global.resources = [];
-			console.log("wallaby.js:setup: setup for test");
+			if (global.resources) {
+				wallaby.delayStart();
+				let setupNumber = 1;
+				Promise.all(
+					global.resources.map((r) => {
+						console.log(`wallaby.js:teardown: #${setupNumber}: Tearing down lost setup #${r.uniqueId}...`);
+						r.teardown();
+					})
+				).then(() => {
+					global.resources = [];
+					console.log("wallaby.js:setup: teardown done; setup for test");
+					wallaby.start();
+				});
+			} else {
+				console.log("wallaby.js:setup: no prior teardown; setup for test");
+				global.resources = [];
+			}
 		},
 
-		teardown: function (wallaby) {
-			console.log(`wallaby.js:teardown: Tearing down ${global.resources.length} setups`);
-			let setupNumber = 1;
-			return new Promise((resolve) => {
-				global.resources.forEach(async (resource) => {
-					try {
-						console.log(
-							`wallaby.js:teardown: #${setupNumber}: Tearing down lost setup #${resource.uniqueId}...`
-						);
-						await resource.teardown();
-						console.log(`wallaby.js:teardown: #${setupNumber}: #${resource.uniqueId} torn down`);
-					} catch (err) {
-						console.error(
-							`wallaby.js:teardown: #${setupNumber}: Failed to tear down setup #${resource.uniqueId}: ${err}`
-						);
-						console.log(err.stack);
-					}
-				});
-				console.log("wallaby.js:teardown: Teardown complete");
-				resolve();
-			});
-		},
+		teardown: function (wallaby) {},
 	};
 };
